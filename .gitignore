@@ -8,9 +8,33 @@
 *.ctxt
 
 # Mobile Tools for Java (J2ME)
-.mtj.tmp/
+### Gradle ###
+.gradle/
+build/
 
-# Package Files #
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### VS Code ###
+.vscode/
+
+### Logs ###
+*.log
+*.out
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Firebase secret (⚠️ VIKTIG) ###
+src/main/resources/firebase/serviceAccountKey.json
+
+### Java build artifacts ###
+*.class
 *.jar
 *.war
 *.nar
@@ -19,6 +43,7 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+### Crash logs ###
 hs_err_pid*
 replay_pid*
+
