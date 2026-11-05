@@ -25,6 +25,7 @@ public class FishSpeciesService {
 
         Map<String, Object> data = new HashMap<>();
         data.put("commonName", speciesDto.getCommonName());
+        data.put("norwegianName", speciesDto.getNorwegianName());
         data.put("scientificName", speciesDto.getScientificName());
         data.put("species", speciesDto.getSpecies());
         data.put("family", speciesDto.getFamily());
@@ -71,6 +72,7 @@ public class FishSpeciesService {
 
             Map<String, Object> data = new HashMap<>();
             data.put("commonName", speciesDto.getCommonName());
+            data.put("norwegianName", speciesDto.getNorwegianName());
             data.put("scientificName", speciesDto.getScientificName());
             data.put("species", speciesDto.getSpecies());
             data.put("family", speciesDto.getFamily());
@@ -125,67 +127,53 @@ public class FishSpeciesService {
 
         if (waterType != null && !waterType.isEmpty()) {
             filterFields.add("waterType");
-            filterValues.put("waterType", waterType.toLowerCase());
+            filterValues.put("waterType", waterType);
         }
         if (family != null && !family.isEmpty()) {
             filterFields.add("family");
-            filterValues.put("family", family.toLowerCase());
+            filterValues.put("family", family);
         }
         if (habitat != null && !habitat.isEmpty()) {
             filterFields.add("habitat");
-            filterValues.put("habitat", habitat.toLowerCase());
+            filterValues.put("habitat", habitat);
         }
         if (diet != null && !diet.isEmpty()) {
             filterFields.add("diet");
-            filterValues.put("diet", diet.toLowerCase());
+            filterValues.put("diet", diet);
         }
         if (conservationStatus != null && !conservationStatus.isEmpty()) {
             filterFields.add("conservationStatus");
-            filterValues.put("conservationStatus", conservationStatus.toLowerCase());
+            filterValues.put("conservationStatus", conservationStatus);
         }
         if (continent != null && !continent.isEmpty()) {
             filterFields.add("continent");
-            filterValues.put("continent", continent.toLowerCase());
+            filterValues.put("continent", continent);
         }
         if (size != null && !size.isEmpty()) {
             filterFields.add("size");
-            filterValues.put("size", size.toLowerCase());
+            filterValues.put("size", size);
+        }
+
+        // Fetch all documents and apply case-insensitive filtering in memory
+        List<FishSpeciesDto> allSpecies = new ArrayList<>();
+        for (QueryDocumentSnapshot doc : query.get().get().getDocuments()) {
+            allSpecies.add(extractSpeciesDto(doc));
         }
 
         if (filterFields.isEmpty()) {
-            for (QueryDocumentSnapshot doc : query.get().get().getDocuments()) {
-                speciesList.add(extractSpeciesDto(doc));
-            }
-            return speciesList;
+            return allSpecies;
         }
 
-        if (filterFields.size() == 1) {
-            String field = filterFields.get(0);
-            String value = filterValues.get(field);
-            Query filteredQuery = query.whereEqualTo(field, value);
-            for (QueryDocumentSnapshot doc : filteredQuery.get().get().getDocuments()) {
-                speciesList.add(extractSpeciesDto(doc));
-            }
-            return speciesList;
-        }
-
-        String firstField = filterFields.get(0);
-        String firstValue = filterValues.get(firstField);
-        filterFields.remove(0);
-        filterValues.remove(firstField);
-
-        Query filteredQuery = query.whereEqualTo(firstField, firstValue);
-        List<FishSpeciesDto> queryResults = new ArrayList<>();
-        for (QueryDocumentSnapshot doc : filteredQuery.get().get().getDocuments()) {
-            queryResults.add(extractSpeciesDto(doc));
-        }
-
-        for (FishSpeciesDto species : queryResults) {
+        for (FishSpeciesDto species : allSpecies) {
             boolean match = true;
             for (String field : filterFields) {
                 String expectedValue = filterValues.get(field);
                 String actualValue = getFieldValue(species, field);
-                if (!expectedValue.equalsIgnoreCase(actualValue != null ? actualValue : "")) {
+                if (actualValue == null || actualValue.isEmpty()) {
+                    match = false;
+                    break;
+                }
+                if (!expectedValue.equalsIgnoreCase(actualValue)) {
                     match = false;
                     break;
                 }
@@ -216,18 +204,68 @@ public class FishSpeciesService {
         DocumentSnapshot doc = db.collection(COLLECTION).document(speciesId).get().get();
 
         if (doc.exists()) {
-            return extractSpeciesDto((QueryDocumentSnapshot) doc);
+            FishSpeciesDto dto = new FishSpeciesDto();
+            dto.setId(doc.getId());
+            dto.setCommonName(doc.getString("commonName"));
+            dto.setNorwegianName(doc.getString("norwegianName"));
+            dto.setScientificName(doc.getString("scientificName"));
+            dto.setSpecies(doc.getString("species"));
+            dto.setFamily(doc.getString("family"));
+            dto.setGenus(doc.getString("genus"));
+            Object nr = doc.get("nativeRegions");
+            dto.setNativeRegions(nr instanceof List ? (List<String>) nr : null);
+            Object nc = doc.get("nativeCountries");
+            dto.setNativeCountries(nc instanceof List ? (List<String>) nc : null);
+            dto.setContinent(doc.getString("continent"));
+            dto.setWaterType(doc.getString("waterType"));
+            Object hb = doc.get("habitats");
+            dto.setHabitats(hb instanceof List ? (List<String>) hb : null);
+            Object wb = doc.get("waterBodyTypes");
+            dto.setWaterBodyTypes(wb instanceof List ? (List<String>) wb : null);
+            Map<String, Object> data = doc.getData();
+            if (data != null) {
+                Object minDepthObj = data.get("minDepth");
+                dto.setMinDepth(minDepthObj instanceof Number ? ((Number) minDepthObj).intValue() : null);
+                Object maxDepthObj = data.get("maxDepth");
+                dto.setMaxDepth(maxDepthObj instanceof Number ? ((Number) maxDepthObj).intValue() : null);
+                Object lifespanObj = data.get("lifespan");
+                dto.setLifespan(lifespanObj instanceof Number ? ((Number) lifespanObj).intValue() : null);
+            }
+            dto.setMinTemperature(doc.getDouble("minTemperature"));
+            dto.setMaxTemperature(doc.getDouble("maxTemperature"));
+            dto.setAvgWeight(doc.getDouble("avgWeight"));
+            dto.setMaxWeight(doc.getDouble("maxWeight"));
+            dto.setAvgLength(doc.getDouble("avgLength"));
+            dto.setMaxLength(doc.getDouble("maxLength"));
+            dto.setColor(doc.getString("color"));
+            dto.setSize(doc.getString("size"));
+            dto.setDiet(doc.getString("diet"));
+            Object pr = doc.get("prey");
+            dto.setPrey(pr instanceof List ? (List<String>) pr : null);
+            dto.setBehavior(doc.getString("behavior"));
+            dto.setMigrationPattern(doc.getString("migrationPattern"));
+            dto.setSpawningSeason(doc.getString("spawningSeason"));
+            dto.setSpawningHabitat(doc.getString("spawningHabitat"));
+            dto.setConservationStatus(doc.getString("conservationStatus"));
+            Object ps = doc.get("protectedSpecies");
+            dto.setProtectedSpecies(ps instanceof Boolean ? (Boolean) ps : null);
+            dto.setNotes(doc.getString("notes"));
+            dto.setDescription(doc.getString("description"));
+            return dto;
         }
         return null;
     }
 
     public FishSpeciesDto getSpeciesByScientificName(String scientificName) throws Exception {
         Firestore db = FirestoreClient.getFirestore();
-        Query query = db.collection(COLLECTION).whereEqualTo("scientificName", scientificName);
+        Query query = db.collection(COLLECTION);
         List<QueryDocumentSnapshot> docs = query.get().get().getDocuments();
 
-        if (!docs.isEmpty()) {
-            return extractSpeciesDto(docs.get(0));
+        for (QueryDocumentSnapshot doc : docs) {
+            String storedName = doc.getString("scientificName");
+            if (storedName != null && storedName.equalsIgnoreCase(scientificName)) {
+                return extractSpeciesDto(doc);
+            }
         }
         return null;
     }
@@ -238,6 +276,7 @@ public class FishSpeciesService {
 
         Map<String, Object> data = new HashMap<>();
         if (speciesDto.getCommonName() != null) data.put("commonName", speciesDto.getCommonName());
+        if (speciesDto.getNorwegianName() != null) data.put("norwegianName", speciesDto.getNorwegianName());
         if (speciesDto.getScientificName() != null) data.put("scientificName", speciesDto.getScientificName());
         if (speciesDto.getSpecies() != null) data.put("species", speciesDto.getSpecies());
         if (speciesDto.getFamily() != null) data.put("family", speciesDto.getFamily());
@@ -293,18 +332,30 @@ public class FishSpeciesService {
         FishSpeciesDto dto = new FishSpeciesDto();
         dto.setId(doc.getId());
         dto.setCommonName(doc.getString("commonName"));
+        dto.setNorwegianName(doc.getString("norwegianName"));
         dto.setScientificName(doc.getString("scientificName"));
         dto.setSpecies(doc.getString("species"));
         dto.setFamily(doc.getString("family"));
         dto.setGenus(doc.getString("genus"));
-        dto.setNativeRegions((List<String>) doc.get("nativeRegions"));
-        dto.setNativeCountries((List<String>) doc.get("nativeCountries"));
+        Object nr = doc.get("nativeRegions");
+        dto.setNativeRegions(nr instanceof List ? (List<String>) nr : null);
+        Object nc = doc.get("nativeCountries");
+        dto.setNativeCountries(nc instanceof List ? (List<String>) nc : null);
         dto.setContinent(doc.getString("continent"));
         dto.setWaterType(doc.getString("waterType"));
-        dto.setHabitats((List<String>) doc.get("habitats"));
-        dto.setWaterBodyTypes((List<String>) doc.get("waterBodyTypes"));
-        dto.setMinDepth(doc.contains("minDepth") ? ((Number) doc.getData().get("minDepth")).intValue() : null);
-        dto.setMaxDepth(doc.contains("maxDepth") ? ((Number) doc.getData().get("maxDepth")).intValue() : null);
+        Object hb = doc.get("habitats");
+        dto.setHabitats(hb instanceof List ? (List<String>) hb : null);
+        Object wb = doc.get("waterBodyTypes");
+        dto.setWaterBodyTypes(wb instanceof List ? (List<String>) wb : null);
+        Map<String, Object> data = doc.getData();
+        if (data != null) {
+            Object minDepthObj = data.get("minDepth");
+            dto.setMinDepth(minDepthObj instanceof Number ? ((Number) minDepthObj).intValue() : null);
+            Object maxDepthObj = data.get("maxDepth");
+            dto.setMaxDepth(maxDepthObj instanceof Number ? ((Number) maxDepthObj).intValue() : null);
+            Object lifespanObj = data.get("lifespan");
+            dto.setLifespan(lifespanObj instanceof Number ? ((Number) lifespanObj).intValue() : null);
+        }
         dto.setMinTemperature(doc.getDouble("minTemperature"));
         dto.setMaxTemperature(doc.getDouble("maxTemperature"));
         dto.setAvgWeight(doc.getDouble("avgWeight"));
@@ -314,14 +365,15 @@ public class FishSpeciesService {
         dto.setColor(doc.getString("color"));
         dto.setSize(doc.getString("size"));
         dto.setDiet(doc.getString("diet"));
-        dto.setPrey((List<String>) doc.get("prey"));
+        Object pr = doc.get("prey");
+        dto.setPrey(pr instanceof List ? (List<String>) pr : null);
         dto.setBehavior(doc.getString("behavior"));
         dto.setMigrationPattern(doc.getString("migrationPattern"));
         dto.setSpawningSeason(doc.getString("spawningSeason"));
         dto.setSpawningHabitat(doc.getString("spawningHabitat"));
-        dto.setLifespan(doc.contains("lifespan") ? ((Number) doc.getData().get("lifespan")).intValue() : null);
         dto.setConservationStatus(doc.getString("conservationStatus"));
-        dto.setProtectedSpecies(doc.getBoolean("protectedSpecies"));
+        Object ps = doc.get("protectedSpecies");
+        dto.setProtectedSpecies(ps instanceof Boolean ? (Boolean) ps : null);
         dto.setNotes(doc.getString("notes"));
         dto.setDescription(doc.getString("description"));
         return dto;

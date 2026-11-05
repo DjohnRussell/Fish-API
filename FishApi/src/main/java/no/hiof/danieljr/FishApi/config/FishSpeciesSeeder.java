@@ -29,7 +29,22 @@ public class FishSpeciesSeeder implements ApplicationRunner {
         List<FishSpeciesDto> existing = fishSpeciesService.getAllSpecies();
 
         if (!existing.isEmpty()) {
-            log.info("Fish species database already contains {} species. Skipping seed.", existing.size());
+            // Check if any species is missing norwegianName and update them
+            boolean needsUpdate = existing.stream().anyMatch(s -> s.getNorwegianName() == null || s.getNorwegianName().isEmpty());
+            if (needsUpdate) {
+                log.info("Updating existing species with Norwegian names...");
+                List<FishSpeciesDto> speciesList = buildSpeciesData();
+                for (FishSpeciesDto species : speciesList) {
+                    String docId = species.getScientificName().replaceAll("[\\s()]", "").toLowerCase();
+                    // Only update the norwegianName field
+                    FishSpeciesDto updateDto = new FishSpeciesDto();
+                    updateDto.setNorwegianName(species.getNorwegianName());
+                    fishSpeciesService.updateSpecies(docId, updateDto);
+                }
+                log.info("Successfully updated {} species with Norwegian names.", speciesList.size());
+            } else {
+                log.info("Fish species database already contains {} species with Norwegian names. Skipping.", existing.size());
+            }
             return;
         }
 
@@ -43,7 +58,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
         return Arrays.asList(
                 // ===== SALMONIDAE (Salmon & Trout Family) =====
 
-                new FishSpeciesDto(null, "Atlantic Salmon", "Salmo salar", "salar", "Salmonidae", "Salmo",
+                new FishSpeciesDto(null, "Atlantic Salmon", "Atlanterhavssørl", "Salmo salar", "salar", "Salmonidae", "Salmo",
                         Arrays.asList("North Atlantic", "Eastern Canada", "Norway", "Iceland", "Scotland"),
                         Arrays.asList("Norway", "Iceland", "Canada", "United States", "United Kingdom", "Ireland", "Faroe Islands", "Greenland"),
                         "Europe", "anadromous",
@@ -57,7 +72,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "The Atlantic salmon is a highly prized game fish known for its remarkable migratory journey from freshwater spawning grounds to the open ocean and back."),
 
-                new FishSpeciesDto(null, "Rainbow Trout", "Oncorhynchus mykiss", "mykiss", "Salmonidae", "Oncorhynchus",
+                new FishSpeciesDto(null, "Rainbow Trout", "Regnbueørret", "Oncorhynchus mykiss", "mykiss", "Salmonidae", "Oncorhynchus",
                         Arrays.asList("Pacific Northwest", "North America"),
                         Arrays.asList("United States", "Canada"),
                         "North America", "freshwater",
@@ -71,7 +86,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "One of the most popular game fish worldwide, widely stocked in freshwater systems. The anadromous form is known as steelhead."),
 
-                new FishSpeciesDto(null, "Brown Trout", "Salmo trutta", "trutta", "Salmonidae", "Salmo",
+                new FishSpeciesDto(null, "Brown Trout", "Brunørret", "Salmo trutta", "trutta", "Salmonidae", "Salmo",
                         Arrays.asList("Europe", "North Africa", "Western Asia"),
                         Arrays.asList("United Kingdom", "Germany", "France", "Norway", "Spain", "Italy", "Poland"),
                         "Europe", "anadromous",
@@ -85,7 +100,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "A native European trout that is both freshwater resident and anadromous (sea trout). Known for being a cautious and challenging catch."),
 
-                new FishSpeciesDto(null, "Brook Trout", "Salvelinus fontinalis", "fontinalis", "Salmonidae", "Salvelinus",
+                new FishSpeciesDto(null, "Brook Trout", "Bekkeørret", "Salvelinus fontinalis", "fontinalis", "Salmonidae", "Salvelinus",
                         Arrays.asList("Eastern North America"),
                         Arrays.asList("United States", "Canada"),
                         "North America", "freshwater",
@@ -99,7 +114,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "Also called speckled trout, it is the state fish of New York and Maryland. Prefers cold, clear, well-oxygenated streams."),
 
-                new FishSpeciesDto(null, "Lake Trout", "Salvelinus namaycush", "namaycush", "Salmonidae", "Salvelinus",
+                new FishSpeciesDto(null, "Lake Trout", "Innsjøørret", "Salvelinus namaycush", "namaycush", "Salmonidae", "Salvelinus",
                         Arrays.asList("Northern North America"),
                         Arrays.asList("Canada", "United States"),
                         "North America", "freshwater",
@@ -113,7 +128,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "The largest member of the char family found in North America, inhabiting deep, cold lakes."),
 
-                new FishSpeciesDto(null, "Arctic Char", "Salvelinus alpinus", "alpinus", "Salmonidae", "Salvelinus",
+                new FishSpeciesDto(null, "Arctic Char", "Røye", "Salvelinus alpinus", "alpinus", "Salmonidae", "Salvelinus",
                         Arrays.asList("Arctic regions", "Northern Europe", "Northern Asia", "Northern North America"),
                         Arrays.asList("Norway", "Iceland", "Canada", "Greenland", "Russia", "Finland", "Sweden"),
                         "Europe", "anadromous",
@@ -129,7 +144,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CICHLIDAE (Cichlid Family) =====
 
-                new FishSpeciesDto(null, "Nile Tilapia", "Oreochromis niloticus", "niloticus", "Cichlidae", "Oreochromis",
+                new FishSpeciesDto(null, "Nile Tilapia", "Niltilapia", "Oreochromis niloticus", "niloticus", "Cichlidae", "Oreochromis",
                         Arrays.asList("East Africa", "Nile Basin"),
                         Arrays.asList("Egypt", "Ethiopia", "Kenya", "Sudan", "Tanzania", "Uganda"),
                         "Africa", "freshwater",
@@ -145,7 +160,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CENTRARCHIDAE (Sunfish Family) =====
 
-                new FishSpeciesDto(null, "Largemouth Bass", "Micropterus salmoides", "salmoides", "Centrarchidae", "Micropterus",
+                new FishSpeciesDto(null, "Largemouth Bass", "Svartmunnbass", "Micropterus salmoides", "salmoides", "Centrarchidae", "Micropterus",
                         Arrays.asList("Eastern and Central North America"),
                         Arrays.asList("United States", "Canada", "Mexico"),
                         "North America", "freshwater",
@@ -159,7 +174,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "The most popular game fish in North America, known for its aggressive strikes and fighting ability."),
 
-                new FishSpeciesDto(null, "Smallmouth Bass", "Micropterus dolomieu", "dolomieu", "Centrarchidae", "Micropterus",
+                new FishSpeciesDto(null, "Smallmouth Bass", "Rødmunnbass", "Micropterus dolomieu", "dolomieu", "Centrarchidae", "Micropterus",
                         Arrays.asList("Eastern North America", "Great Lakes"),
                         Arrays.asList("United States", "Canada"),
                         "North America", "freshwater",
@@ -173,7 +188,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "Known as the 'bronze zebra,' it is highly prized for its fighting spirit and preference for rocky river habitats."),
 
-                new FishSpeciesDto(null, "Bluegill", "Lepomis macrochirus", "macrochirus", "Centrarchidae", "Lepomis",
+                new FishSpeciesDto(null, "Bluegill", "Blågill", "Lepomis macrochirus", "macrochirus", "Centrarchidae", "Lepomis",
                         Arrays.asList("Eastern and Central North America"),
                         Arrays.asList("United States", "Canada"),
                         "North America", "freshwater",
@@ -189,7 +204,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== ESCOCEPIDAE (Pikeperch Family) =====
 
-                new FishSpeciesDto(null, "Zander", "Sander lucioperca", "lucioperca", "Esocidae", "Sander",
+                new FishSpeciesDto(null, "Zander", "Gjeddeabbor", "Sander lucioperca", "lucioperca", "Esocidae", "Sander",
                         Arrays.asList("Eastern Europe", "Western Asia"),
                         Arrays.asList("Russia", "Germany", "Poland", "Romania", "Ukraine", "Hungary"),
                         "Europe", "freshwater",
@@ -205,7 +220,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== ESCOCEPIDAE (Pike Family) =====
 
-                new FishSpeciesDto(null, "Northern Pike", "Esox lucius", "lucius", "Esocidae", "Esox",
+                new FishSpeciesDto(null, "Northern Pike", "Gjedde", "Esox lucius", "lucius", "Esocidae", "Esox",
                         Arrays.asList("Northern Hemisphere", "Europe", "Asia", "North America"),
                         Arrays.asList("Russia", "Canada", "United States", "Norway", "Sweden", "Finland", "Germany", "Poland"),
                         "Europe", "freshwater",
@@ -221,7 +236,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== PERCACEAE (Perch Family) =====
 
-                new FishSpeciesDto(null, "European Perch", "Perca fluviatilis", "fluviatilis", "Percidae", "Perca",
+                new FishSpeciesDto(null, "European Perch", "Abbor", "Perca fluviatilis", "fluviatilis", "Percidae", "Perca",
                         Arrays.asList("Europe", "Northern Asia"),
                         Arrays.asList("United Kingdom", "Germany", "France", "Norway", "Sweden", "Russia", "Poland"),
                         "Europe", "freshwater",
@@ -235,7 +250,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "A popular game and food fish throughout Europe, recognized by its distinctive vertical bars."),
 
-                new FishSpeciesDto(null, "Yellow Perch", "Perca flavescens", "flavescens", "Percidae", "Perca",
+                new FishSpeciesDto(null, "Yellow Perch", "Gul abbor", "Perca flavescens", "flavescens", "Percidae", "Perca",
                         Arrays.asList("Central and Eastern North America"),
                         Arrays.asList("United States", "Canada"),
                         "North America", "freshwater",
@@ -251,7 +266,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== GADIDAE (Cod Family) =====
 
-                new FishSpeciesDto(null, "Atlantic Cod", "Gadus morhua", "morhua", "Gadidae", "Gadus",
+                new FishSpeciesDto(null, "Atlantic Cod", "Torske", "Gadus morhua", "morhua", "Gadidae", "Gadus",
                         Arrays.asList("North Atlantic"),
                         Arrays.asList("Norway", "Iceland", "Canada", "United States", "United Kingdom", "Faroe Islands", "Greenland", "Denmark"),
                         "Europe", "saltwater",
@@ -265,7 +280,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "VU", false, null,
                         "One of the most important commercial fish in the world, historically central to the fishing industry of Northern Europe and North America."),
 
-                new FishSpeciesDto(null, "Haddock", "Melanogrammus aeglefinus", "aeglefinus", "Gadidae", "Melanogrammus",
+                new FishSpeciesDto(null, "Haddock", "Høydire", "Melanogrammus aeglefinus", "aeglefinus", "Gadidae", "Melanogrammus",
                         Arrays.asList("North Atlantic"),
                         Arrays.asList("Norway", "Iceland", "Canada", "United Kingdom", "Faroe Islands", "Greenland"),
                         "Europe", "saltwater",
@@ -279,7 +294,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "A close relative of cod, recognized by a dark thumbprint-like spot behind the gill cover."),
 
-                new FishSpeciesDto(null, "Pollock", "Pollachius virens", "virens", "Gadidae", "Pollachius",
+                new FishSpeciesDto(null, "Pollock", "Sei", "Pollachius virens", "virens", "Gadidae", "Pollachius",
                         Arrays.asList("North Atlantic"),
                         Arrays.asList("Norway", "Iceland", "United Kingdom", "Ireland", "Canada"),
                         "Europe", "saltwater",
@@ -295,7 +310,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== SCIAENIDAE (Drum Family) =====
 
-                new FishSpeciesDto(null, "Atlantic Croaker", "Micropogonias undulatus", "undulatus", "Sciaenidae", "Micropogonias",
+                new FishSpeciesDto(null, "Atlantic Croaker", "Atlanterhavskroaker", "Micropogonias undulatus", "undulatus", "Sciaenidae", "Micropogonias",
                         Arrays.asList("Western Atlantic"),
                         Arrays.asList("United States", "Mexico", "Brazil"),
                         "North America", "brackish",
@@ -311,7 +326,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== MORONIDAE (Weakfish Family) =====
 
-                new FishSpeciesDto(null, "Striped Bass", "Morone saxatilis", "saxatilis", "Moronidae", "Morone",
+                new FishSpeciesDto(null, "Striped Bass", "Striped bass", "Morone saxatilis", "saxatilis", "Moronidae", "Morone",
                         Arrays.asList("Eastern North America"),
                         Arrays.asList("United States", "Canada"),
                         "North America", "anadromous",
@@ -327,7 +342,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CENTROPOMIDAE (Snook Family) =====
 
-                new FishSpeciesDto(null, "Red Drum", "Sciaenops ocellatus", "ocellatus", "Sciaenidae", "Sciaenops",
+                new FishSpeciesDto(null, "Red Drum", "Rød tromme", "Sciaenops ocellatus", "ocellatus", "Sciaenidae", "Sciaenops",
                         Arrays.asList("Western Atlantic", "Gulf of Mexico"),
                         Arrays.asList("United States", "Mexico", "Brazil"),
                         "North America", "brackish",
@@ -343,7 +358,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CARANGIDAE (Jacks and Pompano) =====
 
-                new FishSpeciesDto(null, "Atlantic Pompano", "Trachinotus carolinus", "carolinus", "Carangidae", "Trachinotus",
+                new FishSpeciesDto(null, "Atlantic Pompano", "Atlanterhavspompano", "Trachinotus carolinus", "carolinus", "Carangidae", "Trachinotus",
                         Arrays.asList("Western Atlantic"),
                         Arrays.asList("United States", "Mexico", "Brazil"),
                         "North America", "saltwater",
@@ -359,7 +374,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== SERRANIDAE (Groupers and Sea Bass) =====
 
-                new FishSpeciesDto(null, "European Sea Bass", "Dicentrarchus labrax", "labrax", "Moronidae", "Dicentrarchus",
+                new FishSpeciesDto(null, "European Sea Bass", "Sibbe", "Dicentrarchus labrax", "labrax", "Moronidae", "Dicentrarchus",
                         Arrays.asList("Eastern Atlantic", "Mediterranean", "Black Sea"),
                         Arrays.asList("Spain", "France", "Italy", "Greece", "Portugal", "Morocco"),
                         "Europe", "brackish",
@@ -375,7 +390,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== LABRIDAE (Wrasse Family) =====
 
-                new FishSpeciesDto(null, "Common Wrasse", "Labrus bergylta", "bergylta", "Labridae", "Labrus",
+                new FishSpeciesDto(null, "Common Wrasse", "Kobbe", "Labrus bergylta", "bergylta", "Labridae", "Labrus",
                         Arrays.asList("North Atlantic", "Norway", "Scotland"),
                         Arrays.asList("Norway", "United Kingdom", "Iceland", "Faroe Islands", "Canada"),
                         "Europe", "saltwater",
@@ -391,7 +406,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CYPINIDAE (Cyprinid Family) =====
 
-                new FishSpeciesDto(null, "Common Carp", "Cyprinus carpio", "carpio", "Cyprinidae", "Cyprinus",
+                new FishSpeciesDto(null, "Common Carp", "Karp", "Cyprinus carpio", "carpio", "Cyprinidae", "Cyprinus",
                         Arrays.asList("Europe", "Asia"),
                         Arrays.asList("Germany", "France", "Russia", "China", "Poland", "Hungary"),
                         "Europe", "freshwater",
@@ -405,7 +420,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "One of the most widely distributed fish species in the world, important for both aquaculture and carp fishing."),
 
-                new FishSpeciesDto(null, "Silver Carp", "Hypophthalmichthys molitrix", "molitrix", "Cyprinidae", "Hypophthalmichthys",
+                new FishSpeciesDto(null, "Silver Carp", "Sølvkarp", "Hypophthalmichthys molitrix", "molitrix", "Cyprinidae", "Hypophthalmichthys",
                         Arrays.asList("Asia", "Siberia"),
                         Arrays.asList("China", "Russia", "Kazakhstan"),
                         "Asia", "freshwater",
@@ -419,7 +434,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "A large filter-feeding carp native to Asia, widely farmed and introduced to many regions."),
 
-                new FishSpeciesDto(null, "Common Roach", "Rutilus rutilus", "rutilus", "Cyprinidae", "Rutilus",
+                new FishSpeciesDto(null, "Common Roach", "Røye", "Rutilus rutilus", "rutilus", "Cyprinidae", "Rutilus",
                         Arrays.asList("Europe", "Northern Asia"),
                         Arrays.asList("United Kingdom", "Germany", "France", "Russia", "Poland", "Sweden"),
                         "Europe", "freshwater",
@@ -433,7 +448,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "A common European freshwater fish, popular among coarse fish anglers."),
 
-                new FishSpeciesDto(null, "European Chub", "Squalius cephalus", "cephalus", "Cyprinidae", "Squalius",
+                new FishSpeciesDto(null, "European Chub", "Braxen", "Squalius cephalus", "cephalus", "Cyprinidae", "Squalius",
                         Arrays.asList("Western and Central Europe"),
                         Arrays.asList("United Kingdom", "France", "Germany", "Spain", "Italy"),
                         "Europe", "freshwater",
@@ -449,7 +464,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== SILURIDAE (Catfish Family) =====
 
-                new FishSpeciesDto(null, "Wels Catfish", "Silurus glanis", "glanis", "Siluridae", "Silurus",
+                new FishSpeciesDto(null, "Wels Catfish", "Ålreke", "Silurus glanis", "glanis", "Siluridae", "Silurus",
                         Arrays.asList("Central and Eastern Europe"),
                         Arrays.asList("Germany", "Poland", "Romania", "Hungary", "Russia", "Ukraine"),
                         "Europe", "freshwater",
@@ -465,7 +480,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== ICTALURIDAE (North American Catfish) =====
 
-                new FishSpeciesDto(null, "Channel Catfish", "Ictalurus punctatus", "punctatus", "Ictaluridae", "Ictalurus",
+                new FishSpeciesDto(null, "Channel Catfish", "Kanaalkattfisk", "Ictalurus punctatus", "punctatus", "Ictaluridae", "Ictalurus",
                         Arrays.asList("Central North America"),
                         Arrays.asList("United States", "Canada", "Mexico"),
                         "North America", "freshwater",
@@ -479,7 +494,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "The most widely farmed catfish in the United States and a popular sport fish."),
 
-                new FishSpeciesDto(null, "Blue Catfish", "Ictalurus furcatus", "furcatus", "Ictaluridae", "Ictalurus",
+                new FishSpeciesDto(null, "Blue Catfish", "Blå kattfisk", "Ictalurus furcatus", "furcatus", "Ictaluridae", "Ictalurus",
                         Arrays.asList("Central North America"),
                         Arrays.asList("United States", "Mexico"),
                         "North America", "freshwater",
@@ -495,7 +510,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== ONCORYNCHUS (Pacific Salmon) =====
 
-                new FishSpeciesDto(null, "Chinook Salmon", "Oncorhynchus tshawytscha", "tshawytscha", "Salmonidae", "Oncorhynchus",
+                new FishSpeciesDto(null, "Chinook Salmon", "Kongesørl", "Oncorhynchus tshawytscha", "tshawytscha", "Salmonidae", "Oncorhynchus",
                         Arrays.asList("Pacific Northwest", "Alaska", "Russia"),
                         Arrays.asList("United States", "Canada", "Russia", "Japan"),
                         "North America", "anadromous",
@@ -509,7 +524,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "The largest Pacific salmon species, also called king salmon, highly valued for sport and commercial fishing."),
 
-                new FishSpeciesDto(null, "Sockeye Salmon", "Oncorhynchus nerka", "nerka", "Salmonidae", "Oncorhynchus",
+                new FishSpeciesDto(null, "Sockeye Salmon", "Rødøye", "Oncorhynchus nerka", "nerka", "Salmonidae", "Oncorhynchus",
                         Arrays.asList("North Pacific", "Alaska", "British Columbia"),
                         Arrays.asList("United States", "Canada", "Russia", "Japan"),
                         "North America", "anadromous",
@@ -523,7 +538,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "Known for its bright red spawning color and excellent eating quality, it is a key commercial species."),
 
-                new FishSpeciesDto(null, "Coho Salmon", "Oncorhynchus kisutch", "kisutch", "Salmonidae", "Oncorhynchus",
+                new FishSpeciesDto(null, "Coho Salmon", "Sølvøye", "Oncorhynchus kisutch", "kisutch", "Salmonidae", "Oncorhynchus",
                         Arrays.asList("North Pacific"),
                         Arrays.asList("United States", "Canada", "Russia", "Japan"),
                         "North America", "anadromous",
@@ -537,7 +552,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "Also called silver salmon, it is a popular sport fish known for its fighting ability."),
 
-                new FishSpeciesDto(null, "Pink Salmon", "Oncorhynchus gorbuscha", "gorbuscha", "Salmonidae", "Oncorhynchus",
+                new FishSpeciesDto(null, "Pink Salmon", "Pinklaks", "Oncorhynchus gorbuscha", "gorbuscha", "Salmonidae", "Oncorhynchus",
                         Arrays.asList("North Pacific"),
                         Arrays.asList("United States", "Canada", "Russia", "Japan", "Alaska"),
                         "North America", "anadromous",
@@ -551,7 +566,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "LC", false, null,
                         "The smallest and most abundant Pacific salmon, with a strict two-year life cycle."),
 
-                new FishSpeciesDto(null, "Chum Salmon", "Oncorhynchus keta", "keta", "Salmonidae", "Oncorhynchus",
+                new FishSpeciesDto(null, "Chum Salmon", "Chum laks", "Oncorhynchus keta", "keta", "Salmonidae", "Oncorhynchus",
                         Arrays.asList("North Pacific"),
                         Arrays.asList("United States", "Canada", "Russia", "Japan", "Alaska"),
                         "North America", "anadromous",
@@ -567,7 +582,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CORYPHAENIDAE (Dolphinfish) =====
 
-                new FishSpeciesDto(null, "Mahi-Mahi", "Coryphaena hippurus", "hippurus", "Coryphaenidae", "Coryphaena",
+                new FishSpeciesDto(null, "Mahi-Mahi", "Mahi-Mahi", "Coryphaena hippurus", "hippurus", "Coryphaenidae", "Coryphaena",
                         Arrays.asList("Tropical and subtropical oceans worldwide"),
                         Arrays.asList("United States", "Mexico", "Brazil", "Japan", "Australia", "Hawaii"),
                         "North America", "saltwater",
@@ -583,7 +598,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== ISTIOPHORIDAE (Billfish) =====
 
-                new FishSpeciesDto(null, "Blue Marlin", "Makaira nigricans", "nigricans", "Istiophoridae", "Makaira",
+                new FishSpeciesDto(null, "Blue Marlin", "Blå marlin", "Makaira nigricans", "nigricans", "Istiophoridae", "Makaira",
                         Arrays.asList("Tropical and subtropical oceans"),
                         Arrays.asList("United States", "Mexico", "Japan", "Hawaii", "Fiji"),
                         "North America", "saltwater",
@@ -597,7 +612,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "VU", true, null,
                         "One of the largest and most sought-after billfish, a trophy of big game fishing."),
 
-                new FishSpeciesDto(null, "Sailfish", "Istiophorus platypterus", "platypterus", "Istiophoridae", "Istiophorus",
+                new FishSpeciesDto(null, "Sailfish", "Seilfisk", "Istiophorus platypterus", "platypterus", "Istiophoridae", "Istiophorus",
                         Arrays.asList("Tropical and subtropical oceans"),
                         Arrays.asList("United States", "Mexico", "Brazil", "Fiji", "Hawaii"),
                         "North America", "saltwater",
@@ -613,7 +628,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CARANX (Jacks) =====
 
-                new FishSpeciesDto(null, "Bluefin Tuna", "Thunnus thynnus", "thynnus", "Scombridae", "Thunnus",
+                new FishSpeciesDto(null, "Bluefin Tuna", "Blåfinne tunfisk", "Thunnus thynnus", "thynnus", "Scombridae", "Thunnus",
                         Arrays.asList("North Atlantic", "Mediterranean"),
                         Arrays.asList("United States", "Spain", "Italy", "Japan", "Iceland", "Norway"),
                         "Europe", "saltwater",
@@ -627,7 +642,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
                         "EN", true, null,
                         "The largest tuna species and one of the most valuable fish in the world, heavily fished for sushi."),
 
-                new FishSpeciesDto(null, "Yellowfin Tuna", "Thunnus albacares", "albacares", "Scombridae", "Thunnus",
+                new FishSpeciesDto(null, "Yellowfin Tuna", "Gulfinne tunfisk", "Thunnus albacares", "albacares", "Scombridae", "Thunnus",
                         Arrays.asList("Tropical and subtropical oceans"),
                         Arrays.asList("United States", "Japan", "Fiji", "Hawaii", "Mexico"),
                         "North America", "saltwater",
@@ -643,7 +658,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== LUTJANIDAE (Snappers) =====
 
-                new FishSpeciesDto(null, "Red Snapper", "Lutjanus campechanus", "campechanus", "Lutjanidae", "Lutjanus",
+                new FishSpeciesDto(null, "Red Snapper", "Rød snapper", "Lutjanus campechanus", "campechanus", "Lutjanidae", "Lutjanus",
                         Arrays.asList("Western Atlantic", "Gulf of Mexico"),
                         Arrays.asList("United States", "Mexico"),
                         "North America", "saltwater",
@@ -659,7 +674,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== HAEMULIDAE (Grunt Family) =====
 
-                new FishSpeciesDto(null, "Mangrove Jack", "Lutjanus argentimaculatus", "argentimaculatus", "Lutjanidae", "Lutjanus",
+                new FishSpeciesDto(null, "Mangrove Jack", "Mangrovejack", "Lutjanus argentimaculatus", "argentimaculatus", "Lutjanidae", "Lutjanus",
                         Arrays.asList("Indo-Pacific"),
                         Arrays.asList("Australia", "Thailand", "Indonesia", "Philippines", "Fiji"),
                         "Asia", "brackish",
@@ -675,7 +690,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CARCHARHINIDAE (Reef Sharks) =====
 
-                new FishSpeciesDto(null, "European Eel", "Anguilla anguilla", "anguilla", "Anguillidae", "Anguilla",
+                new FishSpeciesDto(null, "European Eel", "Europeisk ål", "Anguilla anguilla", "anguilla", "Anguillidae", "Anguilla",
                         Arrays.asList("Europe", "North Africa"),
                         Arrays.asList("United Kingdom", "France", "Germany", "Spain", "Italy", "Norway"),
                         "Europe", "catadromous",
@@ -691,7 +706,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== ALBUcidAE (Tarpon) =====
 
-                new FishSpeciesDto(null, "Tarpon", "Megalops atlanticus", "atlanticus", "Megalopidae", "Megalops",
+                new FishSpeciesDto(null, "Tarpon", "Tarpon", "Megalops atlanticus", "atlanticus", "Megalopidae", "Megalops",
                         Arrays.asList("Western Atlantic", "Gulf of Mexico", "Caribbean"),
                         Arrays.asList("United States", "Mexico", "Brazil", "Cuba"),
                         "North America", "brackish",
@@ -707,7 +722,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CLUPEIDAE (Herring) =====
 
-                new FishSpeciesDto(null, "Herring", "Clupea harengus", "harengus", "Clupeidae", "Clupea",
+                new FishSpeciesDto(null, "Herring", "Sild", "Clupea harengus", "harengus", "Clupeidae", "Clupea",
                         Arrays.asList("North Atlantic"),
                         Arrays.asList("Norway", "United Kingdom", "Iceland", "Canada", "Denmark"),
                         "Europe", "saltwater",
@@ -723,7 +738,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CLUPEIDAE =====
 
-                new FishSpeciesDto(null, "Mackerel", "Scomber scombrus", "scombrus", "Scombridae", "Scomber",
+                new FishSpeciesDto(null, "Mackerel", "Makrell", "Scomber scombrus", "scombrus", "Scombridae", "Scomber",
                         Arrays.asList("North Atlantic"),
                         Arrays.asList("Norway", "United Kingdom", "Iceland", "Canada", "United States"),
                         "Europe", "saltwater",
@@ -739,7 +754,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== SCOMBRIDAE =====
 
-                new FishSpeciesDto(null, "Atlantic Bonito", "Sarda sarda", "sarda", "Scombridae", "Sarda",
+                new FishSpeciesDto(null, "Atlantic Bonito", "Atlanterhavsbonito", "Sarda sarda", "sarda", "Scombridae", "Sarda",
                         Arrays.asList("North Atlantic", "Mediterranean"),
                         Arrays.asList("Spain", "Portugal", "Italy", "Greece", "Morocco"),
                         "Europe", "saltwater",
@@ -755,7 +770,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== TOBUCIDAE (Bream) =====
 
-                new FishSpeciesDto(null, "Common Bream", "Abramis brama", "brama", "Cyprinidae", "Abramis",
+                new FishSpeciesDto(null, "Common Bream", "Braxen", "Abramis brama", "brama", "Cyprinidae", "Abramis",
                         Arrays.asList("Europe", "Northern Asia"),
                         Arrays.asList("United Kingdom", "Germany", "France", "Russia", "Poland"),
                         "Europe", "freshwater",
@@ -771,7 +786,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== ACIPENSERIDAE (Sturgeon) =====
 
-                new FishSpeciesDto(null, "Atlantic Sturgeon", "Acipenser oxyrinchus", "oxyrinchus", "Acipenseridae", "Acipenser",
+                new FishSpeciesDto(null, "Atlantic Sturgeon", "Atlanterhavssjøørre", "Acipenser oxyrinchus", "oxyrinchus", "Acipenseridae", "Acipenser",
                         Arrays.asList("Eastern North America"),
                         Arrays.asList("United States", "Canada"),
                         "North America", "anadromous",
@@ -787,7 +802,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== SYNGNATHIDAE (Seahorse) =====
 
-                new FishSpeciesDto(null, "Flatfish - Sole", "Solea solea", "solea", "Soleidae", "Solea",
+                new FishSpeciesDto(null, "Flatfish - Sole", "Sole", "Solea solea", "solea", "Soleidae", "Solea",
                         Arrays.asList("North Atlantic", "Mediterranean"),
                         Arrays.asList("United Kingdom", "France", "Spain", "Portugal", "Netherlands"),
                         "Europe", "saltwater",
@@ -803,7 +818,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== SCIAENIDAE =====
 
-                new FishSpeciesDto(null, "Weakfish", "Cynoscion regalis", "regalis", "Sciaenidae", "Cynoscion",
+                new FishSpeciesDto(null, "Weakfish", "Svakfisk", "Cynoscion regalis", "regalis", "Sciaenidae", "Cynoscion",
                         Arrays.asList("Western Atlantic"),
                         Arrays.asList("United States", "Canada"),
                         "North America", "brackish",
@@ -819,7 +834,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CENTROPOMIDAE =====
 
-                new FishSpeciesDto(null, "Snook", "Centropomus undecimalis", "undecimalis", "Centropomidae", "Centropomus",
+                new FishSpeciesDto(null, "Snook", "Snook", "Centropomus undecimalis", "undecimalis", "Centropomidae", "Centropomus",
                         Arrays.asList("Western Atlantic", "Caribbean"),
                         Arrays.asList("United States", "Mexico", "Brazil", "Cuba"),
                         "North America", "brackish",
@@ -835,7 +850,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== LOBOSTICHTHYIDAE (Pompano) =====
 
-                new FishSpeciesDto(null, "Flounder", "Paralichthys dentatus", "dentatus", "Paralichthyidae", "Paralichthys",
+                new FishSpeciesDto(null, "Flounder", "Sjøabbor", "Paralichthys dentatus", "dentatus", "Paralichthyidae", "Paralichthys",
                         Arrays.asList("Western Atlantic"),
                         Arrays.asList("United States", "Canada"),
                         "North America", "brackish",
@@ -851,7 +866,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== GADIDAE =====
 
-                new FishSpeciesDto(null, "Hake", "Merluccius merluccius", "merluccius", "Gadidae", "Merluccius",
+                new FishSpeciesDto(null, "Hake", "Hyse", "Merluccius merluccius", "merluccius", "Gadidae", "Merluccius",
                         Arrays.asList("North Atlantic", "Mediterranean"),
                         Arrays.asList("Spain", "Portugal", "France", "United Kingdom", "Morocco"),
                         "Europe", "saltwater",
@@ -867,7 +882,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== MUGILIDAE (Mullet) =====
 
-                new FishSpeciesDto(null, "Grey Mullet", "Mugil cephalus", "cephalus", "Mugilidae", "Mugil",
+                new FishSpeciesDto(null, "Grey Mullet", "Grå mulle", "Mugil cephalus", "cephalus", "Mugilidae", "Mugil",
                         Arrays.asList("Worldwide", "tropical and temperate waters"),
                         Arrays.asList("Australia", "Japan", "Spain", "United States", "South Africa"),
                         "Europe", "brackish",
@@ -883,7 +898,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CALLONIMATIDAE (Sea Perch) =====
 
-                new FishSpeciesDto(null, "Turbot", "Scophthalmus maximus", "maximus", "Scophthalmidae", "Scophthalmus",
+                new FishSpeciesDto(null, "Turbot", "Torskefjell", "Scophthalmus maximus", "maximus", "Scophthalmidae", "Scophthalmus",
                         Arrays.asList("North Atlantic", "Mediterranean", "Black Sea"),
                         Arrays.asList("United Kingdom", "France", "Spain", "Netherlands", "Denmark"),
                         "Europe", "saltwater",
@@ -899,7 +914,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== SCIAENIDAE =====
 
-                new FishSpeciesDto(null, "Spot", "Leiostomus xanthurus", "xanthurus", "Sciaenidae", "Leiostomus",
+                new FishSpeciesDto(null, "Spot", "Plettromme", "Leiostomus xanthurus", "xanthurus", "Sciaenidae", "Leiostomus",
                         Arrays.asList("Western Atlantic"),
                         Arrays.asList("United States"),
                         "North America", "brackish",
@@ -915,7 +930,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== CARANGIDAE =====
 
-                new FishSpeciesDto(null, "Permit", "Trachinotus falcatus", "falcatus", "Carangidae", "Trachinotus",
+                new FishSpeciesDto(null, "Permit", "Permit", "Trachinotus falcatus", "falcatus", "Carangidae", "Trachinotus",
                         Arrays.asList("Tropical Atlantic", "Caribbean"),
                         Arrays.asList("United States", "Bahamas", "Cuba", "Mexico"),
                         "North America", "saltwater",
@@ -931,7 +946,7 @@ public class FishSpeciesSeeder implements ApplicationRunner {
 
                 // ===== HAEMULIDAE =====
 
-                new FishSpeciesDto(null, "Grunts", "Haemulon plumierii", "plumierii", "Haemulidae", "Haemulon",
+                new FishSpeciesDto(null, "Grunts", "Brumpefisk", "Haemulon plumierii", "plumierii", "Haemulidae", "Haemulon",
                         Arrays.asList("Western Atlantic", "Caribbean"),
                         Arrays.asList("United States", "Mexico", "Brazil", "Cuba"),
                         "North America", "saltwater",

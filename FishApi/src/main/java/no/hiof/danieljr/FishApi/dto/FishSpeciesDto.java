@@ -15,6 +15,7 @@ public class FishSpeciesDto {
 
     // Identification
     private String commonName;           // Common name (e.g. "Rainbow Trout")
+    private String norwegianName;        // Norwegian name (e.g. "Regnbueørret")
     private String scientificName;       // Scientific/Latin name (e.g. "Oncorhynchus mykiss")
     private String species;              // Species epithet
     private String family;               // Family classification (e.g. "Salmonidae")
